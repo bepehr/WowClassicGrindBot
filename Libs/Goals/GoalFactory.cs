@@ -13,18 +13,20 @@ namespace Libs
         private readonly AddonReader addonReader;
         public NpcNameFinder NpcNameFinder { get; private set; }
         private readonly WowProcess wowProcess;
+        private readonly IPPather pather;
         private ILogger logger;
 
         public bool PotentialAddsExist => NpcNameFinder.PotentialAddsExist;
 
         public RouteInfo? RouteInfo { get; private set; }
 
-        public GoalFactory(AddonReader addonReader, ILogger logger, WowProcess wowProcess, NpcNameFinder npcNameFinder)
+        public GoalFactory(AddonReader addonReader, ILogger logger, WowProcess wowProcess, NpcNameFinder npcNameFinder, IPPather pather)
         {
             this.logger = logger;
             this.addonReader = addonReader;
             this.NpcNameFinder = npcNameFinder;
             this.wowProcess = wowProcess;
+            this.pather = pather;
         }
 
         public HashSet<GoapGoal> CreateGoals(ClassConfiguration classConfig, IBlacklist blacklist)
@@ -40,10 +42,8 @@ namespace Libs
             var castingHandler = new CastingHandler(wowProcess, addonReader.PlayerReader, logger, classConfig, playerDirection, NpcNameFinder);
 
             var stuckDetector = new StuckDetector(addonReader.PlayerReader, wowProcess, playerDirection, stopMoving, logger);
-            var followRouteAction = new FollowRouteGoal(addonReader.PlayerReader, wowProcess, playerDirection, pathPoints, stopMoving, NpcNameFinder, blacklist, logger, stuckDetector, classConfig);
-            var walkToCorpseAction = new WalkToCorpseGoal(addonReader.PlayerReader, wowProcess, playerDirection, spiritPath, pathPoints, stopMoving, logger, stuckDetector);
-
-            this.RouteInfo = new RouteInfo(pathPoints, spiritPath, followRouteAction, walkToCorpseAction);
+            var followRouteAction = new FollowRouteGoal(addonReader.PlayerReader, wowProcess, playerDirection, pathPoints, stopMoving, NpcNameFinder, blacklist, logger, stuckDetector, classConfig, pather);
+            var walkToCorpseAction = new WalkToCorpseGoal(addonReader.PlayerReader, wowProcess, playerDirection, spiritPath, pathPoints, stopMoving, logger, stuckDetector, pather);
 
             availableActions.Clear();
 
@@ -59,8 +59,6 @@ namespace Libs
             }
             else
             {
-                availableActions.Add(new ItemsBrokenGoal(addonReader.PlayerReader, logger));
-
                 if (classConfig.Mode == Mode.AttendedGrind)
                 {
                     availableActions.Add(new WaitGoal(logger));
@@ -109,30 +107,84 @@ namespace Libs
                 {
                     logger.LogError(ex.ToString());
                 }
+
+
+                foreach (var item in classConfig.NPC.Sequence)
+                {
+                    availableActions.Add(new AdhocNPCGoal(addonReader.PlayerReader, wowProcess, playerDirection, stopMoving, logger, stuckDetector, classConfig, pather, item));
+                    item.Path.AddRange(ReadPath(item.Name, item.PathFilename));
+                }
+
+                var pathProviders = availableActions.Where(a => a is IRouteProvider)
+                    .Cast<IRouteProvider>()
+                    .ToList();
+
+                this.RouteInfo = new RouteInfo(pathPoints, spiritPath, pathProviders, addonReader.PlayerReader);
             }
 
             return availableActions;
         }
 
+        private static string FixPathFilename(string path)
+        {
+            if (!path.Contains(":") && !string.IsNullOrEmpty(path))
+            {
+                return "../json/path/" + path;
+            }
+            return path;
+        }
+
         private static void GetPaths(out List<WowPoint> pathPoints, out List<WowPoint> spiritPath, ClassConfiguration classConfig)
         {
-            if (!classConfig.PathFilename.Contains(":"))
-            {
-                classConfig.PathFilename = "../json/path/" + classConfig.PathFilename;
-            }
+            classConfig.PathFilename = FixPathFilename(classConfig.PathFilename);
+            classConfig.SpiritPathFilename = FixPathFilename(classConfig.SpiritPathFilename);
 
-            if (!classConfig.SpiritPathFilename.Contains(":"))
-            {
-                classConfig.SpiritPathFilename = "../json/path/" + classConfig.SpiritPathFilename;
-            }
+            pathPoints = CreatePathPoints(classConfig);
+            spiritPath = CreateSpiritPathPoints(pathPoints, classConfig);
+        }
 
-            string pathText = File.ReadAllText(classConfig.PathFilename);
-            bool thereAndBack = classConfig.PathThereAndBack;
+        private IEnumerable<WowPoint> ReadPath(string name, string pathFilename)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(pathFilename))
+                {
+                    return new List<WowPoint>();
+                }
+                else
+                {
+                    return JsonConvert.DeserializeObject<List<WowPoint>>(File.ReadAllText(FixPathFilename(pathFilename)));
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Reading path: {name}");
+                throw;
+            }
+        }
+
+        private static List<WowPoint> CreateSpiritPathPoints(List<WowPoint> pathPoints, ClassConfiguration classConfig)
+        {
+            List<WowPoint> spiritPath;
             if (string.IsNullOrEmpty(classConfig.SpiritPathFilename))
             {
-                classConfig.SpiritPathFilename = classConfig.PathFilename;
+                spiritPath = new List<WowPoint> { pathPoints.First() };
             }
-            string spiritText = File.ReadAllText(classConfig.SpiritPathFilename);
+            else
+            {
+                string spiritText = File.ReadAllText(classConfig.SpiritPathFilename);
+                spiritPath = JsonConvert.DeserializeObject<List<WowPoint>>(spiritText);
+            }
+
+            return spiritPath;
+        }
+
+        private static List<WowPoint> CreatePathPoints(ClassConfiguration classConfig)
+        {
+            List<WowPoint> pathPoints;
+            string pathText = File.ReadAllText(classConfig.PathFilename);
+            bool thereAndBack = classConfig.PathThereAndBack;
+
             int step = classConfig.PathReduceSteps ? 2 : 1;
 
             var pathPoints2 = JsonConvert.DeserializeObject<List<WowPoint>>(pathText);
@@ -154,7 +206,7 @@ namespace Libs
             }
 
             pathPoints.Reverse();
-            spiritPath = JsonConvert.DeserializeObject<List<WowPoint>>(spiritText);
+            return pathPoints;
         }
     }
 }

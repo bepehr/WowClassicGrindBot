@@ -44,11 +44,11 @@
         "Log": false
       },
       {
-        "Name": "FrostBolt",
+        "Name": "Frostbolt",
         "HasCastBar": true,
+        "StopBeforeCast": true,
         "Key": "1",
-        "MinMana": 100,
-        "Cooldown": 0
+        "ManaRequirement": 35
       }
     ]
   },

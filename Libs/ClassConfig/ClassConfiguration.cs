@@ -42,6 +42,7 @@ namespace Libs
         public KeyActions Combat { get; set; } = new KeyActions();
         public KeyActions Adhoc { get; set; } = new KeyActions();
         public KeyActions Parallel { get; set; } = new KeyActions();
+        public KeyActions NPC { get; set; } = new KeyActions();
 
         public List<KeyAction> ShapeshiftForm { get; } = new List<KeyAction>();
 
@@ -62,6 +63,7 @@ namespace Libs
             Pull.Initialise(playerReader, requirementFactory, logger);
             Combat.Initialise(playerReader, requirementFactory, logger);
             Adhoc.Initialise(playerReader, requirementFactory, logger);
+            NPC.Initialise(playerReader, requirementFactory, logger);
             Parallel.Initialise(playerReader, requirementFactory, logger);
             ShapeshiftForm.ForEach(i => i.Initialise(playerReader, requirementFactory, logger));
 

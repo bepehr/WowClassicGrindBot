@@ -1,0 +1,212 @@
+{
+  "ClassName": "Mage",
+  "Loot": true,
+
+  "RecordNodes":true,
+  "NPCMaxLevels_Below": 60,
+  "NPCMaxLevels_Above": 0,
+
+  "PathFilename": "Chimera.json",
+  "PathThereAndBack": true,
+  "PathReduceSteps": false,
+  //"Mode": "AttendedGather",
+ // "AllwaysUsePather": true,
+  
+  "Blacklist": [   "Winterspring Screecher" , "Winterspring Owl", "Raging Owlbeast" ,  "Ravasaur", "Scorching Elemental"  ,  "Ironbeak Owl", "Roc",  "Burning Exile", "Mudsnout Gnoll", "Mudsnout Shaman" , "Legashi","Blood Elf","Elf Reclaim","Elf Survey","Searing Roc","Living Storm","Land Rager","BLUEGI","Tunnel","OL' SO","HAREN S","THRAGO", "Elder Razormaw","Highland Razormaw","Boulderfist","witherbark","venomhide","tar beast","toxic horror","hive","hazzali"],
+	
+  "BagCapacity":20,
+  "FreeToDeleteItems":[],
+  
+
+ // "RepairLocation": {"X":45.8,"Y":46.6},
+  //"RepairTargetKey": "=",
+
+ // "VendorLocation": {"X":57.9,"Y":32.5},
+ // "VendorItemThreshold": 80,
+ // "VendorTargetKey": "=",
+  
+  
+
+
+
+
+  "Blink":{
+    "Name": "Blink",
+    "Key": "T"
+  },
+
+  "Pull": {
+    "Sequence": [
+		{	
+        "Name": "Ice barier",
+        "Key": "L",
+        "Cooldown": 60,
+        "Log": false
+      },
+      {
+        "Name": "FrostBolt",
+        "HasCastBar": true,
+        "Key": "1",
+        "MinMana": 100,
+        "Cooldown": 0
+      }
+    ]
+  },
+  "Combat": {
+    "Sequence": [
+      {
+        "Name": "Healing Potion",
+        "Key": "F4",
+        "Requirement": "Health%<15",
+        "Cooldown": 60,
+        "Log": false
+      }, 
+	  {
+        "Name": "Mana Shield",
+        "Key": "F8",
+        "Requirement": "Health%<50",
+        "Cooldown": 60,
+        "Log": false
+      },
+	  {	
+        "Name": "Ice barier",
+        "Key": "L",
+        "Cooldown": 60,
+		 "Requirement": "Health%<40",
+        "Log": false
+      },
+	  {
+        "Name": "Mana Ruby",
+        "Key": "J",
+        "Requirement": "Mana%<20",
+        "Cooldown": 120,
+        "Log": false
+      },
+	  {
+        "Name": "Mana Potion",
+        "Key": "F7",
+        "Requirement": "Mana%<10",
+        "Cooldown": 60,
+        "Log": false
+      },
+      {
+        "Name": "Fire Blast",
+        "Key": "3",
+        "MinMana": 115,
+        "Cooldown": 8,
+		"Requirements": ["SpellInRange:4"]
+      },
+	  
+	  {
+        "Name": "Frost Nova",
+        "Key": "2",
+        "MinMana": 85,
+        "Cooldown": 21,
+		"StepBackAfterCast":1,
+		"DelayUntilCombat":10,
+		"Requirements": [ "Health%<90"]
+      },
+	  
+      {
+        "Name": "FrostBolt",
+        "HasCastBar": true,
+        "StopBeforeCast": true,
+        "Key": "1",
+        "ManaRequirement": 65
+      },
+      {
+        "Name": "Interact",
+        "Key": "H",
+        "Cooldown": 3
+      }
+	  
+    ]
+  },
+  "Parallel": {
+    "Sequence": [
+      {
+        "Name": "Low Health",
+        "HasCastBar": true,
+        "StopBeforeCast": true,
+        "Key": "-",
+        "Requirement": "Health%<90",
+        "Cooldown": 10,
+        "Log": false
+      },
+      {
+        "Name": "Drink",
+        "HasCastBar": true,
+        "StopBeforeCast": true,
+        "Key": "=",
+        "Requirement": "Mana%<70",
+        "Cooldown": 10,
+        "Log": false
+      }
+    ]
+    },
+
+  "Adhoc": {
+    "Sequence": [
+      
+      {
+        "Name": "Frost Armor",
+        "StopBeforeCast": true,
+        "Key": "9",
+        "MinMana": 110,
+        "Requirement": "not Frost Armor",
+        "Log": false
+      },
+      {
+        "Name": "Arcane Intellect",
+        "StopBeforeCast": true,
+        "Key": "0",
+        "MinMana": 520,
+        "Requirement": "not Arcane Intellect",
+        "Log": false
+      },
+      {
+        "Name": "Delete gray items",
+        "HasCastBar": false,
+        "StopBeforeCast": true,
+        "Key": "F5",
+        "Requirement": "Mana%<100",
+        "Cooldown": 600,
+        "Log": false
+      },
+	  {
+        "Name": "Conjure Mana Ruby",
+        "HasCastBar": true,
+        "StopBeforeCast": true,
+        "Key": "F6",
+        "Requirement": "not BagItem:8008:1",
+        "Cooldown": 30,
+        "Log": false
+      },
+      {
+        "Name": "Conjure Water",
+        "HasCastBar": true,
+        "StopBeforeCast": true,
+        "Key": "7",
+        "Requirement": "not BagItem:8078:4",
+        "Cooldown": 30,
+        "Log": false
+      },
+      {
+        "Name": "Conjure Food",
+        "HasCastBar": true,
+        "StopBeforeCast": true,
+        "Key": "8",
+        "Requirement": "not BagItem:8075:4",
+        "Cooldown": 30,
+        "Log": false
+      },
+      {
+        "Name": "Well Fed",
+        "StopBeforeCast": true,
+        "Key": "-",
+        "Requirement": "not Well Fed",
+        "Cooldown": 120,
+        "Log": false
+      }
+    ]}
+}
